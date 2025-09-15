@@ -354,10 +354,49 @@
             cell.style.minWidth = `${col.minWidth}px`;
             cell.dataset.colIndex = String(idx);
             cell.dataset.field = col.field;
+            // apply header alignment just like body cells
+            cell.classList.toggle('align-right', col.align === 'right');
+            cell.classList.toggle('align-center', col.align === 'center');
 
             // 標題
             const title = Utils.el('div', '');
-            title.textContent = col.title || col.field;
+            if (col.__select__) {
+              const chk = Utils.el('input');
+              chk.type = 'checkbox';
+              chk.title = this.t.selectAll;
+              // 初始狀態
+              this._updateHeaderSelectState = this._updateHeaderSelectState || function () {
+                const headerChk = this.header.querySelector('.jdg-header-cell[data-field="__select__"] input[type="checkbox"]');
+                if (!headerChk) return;
+                const visibleKeysNow = this.state.dataView.map(r => this._rowKey(r));
+                const selCount = visibleKeysNow.reduce((acc, k) => acc + (this.state.selected.has(k) ? 1 : 0), 0);
+                headerChk.checked = selCount > 0 && selCount === visibleKeysNow.length && visibleKeysNow.length > 0;
+                headerChk.indeterminate = selCount > 0 && selCount < visibleKeysNow.length;
+              };
+              // 設定初始
+              this._updateHeaderSelectState();
+              // 事件（用同一個處理器接收 click/change，並阻止向上冒泡）
+              const onHeaderToggle = (e) => {
+                e.stopPropagation();
+                const checked = e.target.checked;
+                const visibleKeys = this.state.dataView.map(r => this._rowKey(r));
+                if (checked) {
+                  visibleKeys.forEach(k => this.state.selected.add(k));
+                } else {
+                  visibleKeys.forEach(k => this.state.selected.delete(k));
+                }
+                // 強制重繪目前可視範圍（避免 _onScroll 因範圍未變而提前返回，導致視覺未更新）
+                this._rowPoolRange = { start: -1, end: -1 };
+                this._onScroll(); // 更新列上的勾選視覺
+                this._updateHeaderSelectState(); // 同步表頭狀態
+                this._emit('onSelectionChanged', { rows: this.getSelectedRows() });
+              };
+              chk.addEventListener('click', onHeaderToggle);
+              chk.addEventListener('change', onHeaderToggle);
+              title.appendChild(chk);
+            } else {
+              title.textContent = col.title || col.field;
+            }
             cell.appendChild(title);
 
             // 排序圖示
@@ -533,7 +572,12 @@
 
           // 初次布局與渲染
           this._layout();
+          // 強制重新綁定可視列（排序/過濾/分頁後，範圍可能未變，但內容已變更）
+          this._rowPoolRange = { start: -1, end: -1 };
           this._onScroll();
+
+          // 同步表頭勾選狀態（分頁/排序/搜尋等造成視圖改變時）
+          this._updateHeaderSelectState && this._updateHeaderSelectState();
 
           // 更新分頁列
           this._renderFooter();
@@ -600,6 +644,9 @@
                   if (checked) this.state.selected.add(key);
                   else this.state.selected.delete(key);
                   this._updateRowSelectionVisual(rowEl, key);
+                  // 同步表頭 checkbox 狀態與事件
+                  this._updateHeaderSelectState && this._updateHeaderSelectState();
+                  this._emit('onSelectionChanged', { rows: this.getSelectedRows() });
                 });
                 cell.appendChild(cb);
                 cell.style.justifyContent = 'center';
@@ -899,11 +946,13 @@
             this.state.selected.add(r[keyName]);
           }
           this._onScroll(); // 更新視覺
+          this._updateHeaderSelectState && this._updateHeaderSelectState();
           this._emit('onSelectionChanged', { rows: this.getSelectedRows() });
         }
         clearSelection() {
           this.state.selected.clear();
           this._onScroll();
+          this._updateHeaderSelectState && this._updateHeaderSelectState();
           this._emit('onSelectionChanged', { rows: [] });
         }
 
@@ -1018,65 +1067,3 @@
       if ($) jQueryAdapter($);
 
     })(window, window.$);
-
-    /* =========================================================================
-       示例：生成 10,000 筆資料並初始化 JadeGrid
-       ========================================================================= */
-    (function(){
-      // 產生範例資料
-      function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-      const firstNames = ['John', 'Mary', 'Mike', 'Linda', 'Alex', 'Grace', 'Ben', 'Hannah', 'Leo', 'Sophie'];
-      const lastNames = ['Chen', 'Wang', 'Lin', 'Lee', 'Liu', 'Huang', 'Zhang', 'Wu', 'Yang', 'Tsai'];
-      const cities = ['Taipei', 'Taichung', 'Tainan', 'Kaohsiung', 'Hsinchu', 'Keelung', 'Taoyuan'];
-      const roles = ['Admin', 'Editor', 'Viewer', 'Analyst'];
-      const data = [];
-      for (let i = 1; i <= 10000; i++) {
-        const fn = firstNames[randInt(0, firstNames.length - 1)];
-        const ln = lastNames[randInt(0, lastNames.length - 1)];
-        const name = `${fn} ${ln}`;
-        const email = `${fn.toLowerCase()}.${ln.toLowerCase()}${i}@example.com`;
-        const age = randInt(18, 70);
-        const city = cities[randInt(0, cities.length - 1)];
-        const role = roles[randInt(0, roles.length - 1)];
-        data.push({ id: i, name, email, age, city, role, createdAt: new Date(2020 + (i % 5), i % 12, (i % 28) + 1).toISOString().slice(0,10) });
-      }
-
-      // 初始化
-      $('#grid').jadeGrid({
-        height: 520,
-        theme: 'light',
-        rowKey: 'id',
-        columns: [
-          { field: 'name',  title: '姓名', sortable: true, editable: true, validator: ['required'] },
-          { field: 'email', title: 'Email', sortable: true, editable: true, validator: ['required', 'email'], width: 220 },
-          { field: 'age',   title: '年齡', type: 'number', align: 'right', sortable: true, editable: true, validator: [{ type: 'range', min: 0, max: 120 }], width: 80 },
-          { field: 'city',  title: '城市', sortable: true, width: 120 },
-          { field: 'role',  title: '角色', sortable: true, width: 120 },
-          { field: 'createdAt', title: '建立日期', type: 'date', sortable: true, width: 120 }
-        ],
-        data,
-        selection: { mode: 'multiple', checkbox: true, preserveOnPageChange: true },
-        sorting: { multi: true, server: false },
-        filtering: { server: false, searchPanel: { visible: true, placeholder: '搜尋姓名/Email/城市...' } },
-        pagination: { pageSize: 50, pageSizes: [20, 50, 100, 200], server: false },
-        virtualization: { rows: true, overscan: 8, rowHeight: 36 },
-        editing: { mode: 'cell', validation: { showMessages: true } },
-        export: { excel: { enabled: true, filename: 'users.csv', onlySelected: false } },
-        onReady(grid) {
-          console.log('JadeGrid ready v' + JadeGrid.version);
-        },
-        onSelectionChanged({ rows }) {
-          console.log('選取筆數：', rows.length);
-        },
-        onCellEditCommit({ row, col, oldValue, newValue }) {
-          console.log('編輯完成：', col.field, oldValue, '->', newValue);
-        }
-      });
-
-      // 若要在其他地方呼叫 API（示例）：
-      // const inst = $('#grid').data('jadeGrid');
-      // inst.selectAll();
-      // const selected = inst.getSelectedRows();
-      // inst.exportToExcel({ onlySelected: true });
-
-    })();

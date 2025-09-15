@@ -41,6 +41,7 @@
       margin: 0;
       background: var(--jdg-bg);
       color: var(--jdg-fg);
+      color: var(--jdg-fg);
       font-family: var(--jdg-font);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -185,6 +186,9 @@
     }
     .jdg-cell.align-right { justify-content: flex-end; }
     .jdg-cell.align-center { justify-content: center; }
+    /* Header alignment helpers to mirror cell alignment */
+    .jdg-header-cell.align-right { justify-content: flex-end; }
+    .jdg-header-cell.align-center { justify-content: center; }
 
     /* 編輯器 */
     .jdg-editor {
@@ -247,9 +251,6 @@
       height: 28px;
       border-radius: 6px;
       border: 1px solid var(--jdg-control-border);
-      background: var(--jdg-control-bg);
-      color: var(--jdg-fg);
-      outline: none;
     }
 
     /* 捲軸（美化但保持原生） */
