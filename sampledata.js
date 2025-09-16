@@ -18,8 +18,7 @@ var sampleData = [
     { id: 17, name: 'Charles Martin', age: 41, city: 'Seoul' },
     { id: 18, name: 'Jessica Thompson', age: 32, city: 'Jakarta' },
     { id: 19, name: 'Joseph Garcia', age: 36, city: 'Lagos' },
-    { id: 20, name: 'Sarah Martinez', age: 27, city: 'Karachi' }
-,
+    { id: 20, name: 'Sarah Martinez', age: 27, city: 'Karachi' },
     { id: 21, name: 'Charles Martin', age: 53, city: 'New Delhi' },
     { id: 22, name: 'Susan Wilson', age: 48, city: 'Jakarta' },
     { id: 23, name: 'Sarah Davis', age: 29, city: 'Karachi' },

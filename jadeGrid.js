@@ -1,4 +1,3 @@
-
 /* =========================================================================
        JadeGrid 核心
        ========================================================================= */
@@ -266,16 +265,22 @@
           // 每頁筆數
           const per = Utils.el('span', '', { });
           const sel = Utils.el('select', 'jdg-select');
-          const sizes = this.options.pagination.pageSizes || [20, 50, 100, 200];
+          const sizes = [...(this.options.pagination.pageSizes || [20, 50, 100, 200])];
+          const currentSize = this.options.pagination.pageSize;
+          if (!sizes.includes(currentSize)) {
+            sizes.push(currentSize);
+            sizes.sort((a, b) => a - b);
+          }
           sizes.forEach(s => {
             const opt = Utils.el('option'); opt.value = s; opt.textContent = `${this.t.perPage}: ${s}`;
-            if (s === this.options.pagination.pageSize) opt.selected = true;
+            if (s === currentSize) opt.selected = true;
             sel.appendChild(opt);
           });
           sel.addEventListener('change', () => {
             this.state.pageSize = parseInt(sel.value, 10);
             this.state.page = 1;
             this._applyPipeline();
+            this.body.scrollTop = 0;
           });
           per.appendChild(sel);
           tb.appendChild(per);
@@ -292,6 +297,7 @@
           themeSel.addEventListener('change', () => {
             this.options.theme = themeSel.value;
             this.root.setAttribute('data-theme', this.options.theme);
+            this._applyPipeline();
           });
           tb.appendChild(themeSel);
 
