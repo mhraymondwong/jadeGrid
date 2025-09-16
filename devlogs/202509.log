@@ -1,0 +1,4 @@
+Date: 2024-09-09
+
+- Fixed a bug in the pagination control where the initial page size was not correctly displayed if it wasn't in the default list of page sizes.
+- Fixed an issue where changing the theme did not immediately update the grid's appearance. The grid now properly reloads when a new theme is selected.
