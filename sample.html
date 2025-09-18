@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>JadeGrid - API Data</title>
+    <link rel="stylesheet" href="jadeGrid.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="jadeGrid.js"></script>
+</head>
+<body>
+    <div id="grid"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch('data.json')
+                .then(response => response.json())
+                .then(data => {
+                    new JadeGrid(document.querySelector('#grid'), {
+                        data: data,
+                        columns: [
+                            { field: 'id', title: 'ID', width: 80 },
+                            { field: 'name', title: 'Name', width: 200 },
+                            { field: 'age', title: 'Age', width: 100 },
+                            { field: 'city', title: 'City', width: 200 }
+                        ],
+                        height: 400,
+                        pager: true,
+                        rowNumbers: true,
+                        editable: true,
+                        sortable: true
+                    });
+                });
+        });
+    </script>
+</body>
+</html>

@@ -2,3 +2,5 @@ Date: 2024-09-09
 
 - Fixed a bug in the pagination control where the initial page size was not correctly displayed if it wasn't in the default list of page sizes.
 - Fixed an issue where changing the theme did not immediately update the grid's appearance. The grid now properly reloads when a new theme is selected.
+
+2025-09-12: Fixed special character display issue in sample.html by adding UTF-8 meta tag. Modified files: sample.html. Author: Gemini.
